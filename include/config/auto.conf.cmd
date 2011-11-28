@@ -245,7 +245,6 @@ deps_config := \
 	drivers/video/omap2/dss/Kconfig \
 	drivers/video/omap2/Kconfig \
 	drivers/video/omap/Kconfig \
-	drivers/video/msm/vidc/Kconfig \
 	drivers/video/msm/Kconfig \
 	drivers/video/msm_8x60/sii9234/Kconfig \
 	drivers/video/msm_8x60/vidc/Kconfig \

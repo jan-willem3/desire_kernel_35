@@ -46,8 +46,6 @@ kgsl_cmdstream_readtimestamp(struct kgsl_device *device,
 		KGSL_CMDSTREAM_GET_EOP_TIMESTAMP(device,
 						 (unsigned int *)&timestamp);
 
-	rmb();
-
 	KGSL_CMD_VDBG("return %d\n", timestamp);
 
 	return timestamp;

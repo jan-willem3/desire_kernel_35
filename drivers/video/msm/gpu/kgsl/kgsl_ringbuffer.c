@@ -282,13 +282,13 @@ static int kgsl_ringbuffer_load_pm4_ucode(struct kgsl_device *device)
 	if (status != 0) {
 		KGSL_DRV_ERR("request_firmware failed for %s with error %d\n",
 				YAMATO_PM4_FW, status);
-		goto done;
+		goto error;
 	}
 	/*this firmware must come in 3 word chunks. plus 1 word of version*/
 	if ((fw->size % (sizeof(uint32_t)*3)) != 4) {
 		KGSL_DRV_ERR("bad firmware size %d.\n", fw->size);
 		status = -EINVAL;
-		goto done;
+		goto error_release_fw;
 	}
 	fw_ptr = (unsigned int *)fw->data;
 	fw_word_size = fw->size/sizeof(uint32_t);
@@ -299,8 +299,9 @@ static int kgsl_ringbuffer_load_pm4_ucode(struct kgsl_device *device)
 	for (i = 1; i < fw_word_size; i++)
 		kgsl_yamato_regwrite(device, REG_CP_ME_RAM_DATA, fw_ptr[i]);
 
-done:
+error_release_fw:
 	release_firmware(fw);
+error:
 	return status;
 }
 
@@ -789,8 +790,8 @@ void kgsl_ringbuffer_debug(struct kgsl_ringbuffer *rb,
 			    (unsigned int *)&rb_debug->rbbm_status);
 	kgsl_yamato_regread(rb->device, REG_RBBM_INT_STATUS,
 			    (unsigned int *)&rb_debug->rbbm_int_status);
-//	GSL_RB_GET_SOP_TIMESTAMP(rb, (unsigned int *)&rb_debug->sop_timestamp);
-//	GSL_RB_GET_EOP_TIMESTAMP(rb, (unsigned int *)&rb_debug->eop_timestamp);
+	GSL_RB_GET_SOP_TIMESTAMP(rb, (unsigned int *)&rb_debug->sop_timestamp);
+	GSL_RB_GET_EOP_TIMESTAMP(rb, (unsigned int *)&rb_debug->eop_timestamp);
 
 }
 #endif /*DEBUG*/

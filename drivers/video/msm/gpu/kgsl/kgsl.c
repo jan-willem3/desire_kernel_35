@@ -17,6 +17,7 @@
 */
 #include <linux/miscdevice.h>
 #include <linux/platform_device.h>
+#include <linux/slab.h>
 #include <linux/fb.h>
 #include <linux/file.h>
 #include <linux/fs.h>
@@ -31,13 +32,8 @@
 #include <linux/highmem.h>
 #include <linux/vmalloc.h>
 #include <asm/cacheflush.h>
-#include <linux/delay.h>
 
 #include <asm/atomic.h>
-
-#if defined(CONFIG_ARCH_MSM7X30)
-#include <mach/internal_power_rail.h>
-#endif
 
 #include "kgsl.h"
 #include "kgsl_drawctxt.h"
@@ -54,21 +50,6 @@ struct kgsl_file_private {
 };
 
 static void kgsl_put_phys_file(struct file *file);
-
-#if defined(CONFIG_ARCH_MSM7X30)
-static void kgsl_power(bool on)
-{
-	if (on) {
-		internal_pwr_rail_mode(PWR_RAIL_GRP_CLK,
-				PWR_RAIL_CTL_MANUAL);
-		internal_pwr_rail_ctl(PWR_RAIL_GRP_CLK, 1);
-	} else {
-		internal_pwr_rail_ctl(PWR_RAIL_GRP_CLK, 0);
-		internal_pwr_rail_mode(PWR_RAIL_GRP_CLK,
-					PWR_RAIL_CTL_AUTO);
-	}
-}
-#endif
 
 #ifdef CONFIG_MSM_KGSL_MMU
 static long flush_l1_cache_range(unsigned long addr, int size)
@@ -137,18 +118,16 @@ static void kgsl_clk_enable(void)
 {
 	clk_set_rate(kgsl_driver.ebi1_clk, 128000000);
 	clk_enable(kgsl_driver.imem_clk);
+	if (kgsl_driver.grp_pclk)
+		clk_enable(kgsl_driver.grp_pclk);
 	clk_enable(kgsl_driver.grp_clk);
-#if defined (CONFIG_ARCH_MSM7227) || defined (CONFIG_ARCH_MSM7X30)
-	clk_enable(kgsl_driver.grp_pclk);
-#endif
 }
 
 static void kgsl_clk_disable(void)
 {
-#if defined (CONFIG_ARCH_MSM7227) || defined (CONFIG_ARCH_MSM7X30)
-	clk_disable(kgsl_driver.grp_pclk);
-#endif
 	clk_disable(kgsl_driver.grp_clk);
+	if (kgsl_driver.grp_pclk)
+		clk_disable(kgsl_driver.grp_pclk);
 	clk_disable(kgsl_driver.imem_clk);
 	clk_set_rate(kgsl_driver.ebi1_clk, 0);
 }
@@ -188,13 +167,12 @@ static void kgsl_hw_put_locked(bool start_timer)
 {
 	if ((--kgsl_driver.active_cnt == 0) && start_timer) {
 		mod_timer(&kgsl_driver.standby_timer,
-			  jiffies + msecs_to_jiffies(512));
+			  jiffies + msecs_to_jiffies(20));
 	}
 }
 
 static void kgsl_do_standby_timer(unsigned long data)
 {
-	mdelay(1);
 	if (kgsl_yamato_is_idle(&kgsl_driver.yamato_device))
 		kgsl_hw_disable();
 	else
@@ -212,12 +190,6 @@ static int kgsl_first_open_locked(void)
 
 	kgsl_clk_enable();
 
-#if defined(CONFIG_ARCH_MSM7X30)
-	/* 7x30 has HW bug and needs clocks turned on before the power
-	 * rails
-	 */
-	kgsl_power(1);
-#endif
 	/* init memory apertures */
 	result = kgsl_sharedmem_init(&kgsl_driver.shmem);
 	if (result != 0)
@@ -252,10 +224,6 @@ static int kgsl_last_release_locked(void)
 	/* shutdown memory apertures */
 	kgsl_sharedmem_close(&kgsl_driver.shmem);
 
-#if defined(CONFIG_ARCH_MSM7X30)
-	kgsl_power(0);
-#endif
-
 	kgsl_clk_disable();
 	kgsl_driver.active = false;
 	wake_unlock(&kgsl_driver.wake_lock);
@@ -287,11 +255,9 @@ static int kgsl_release(struct inode *inodep, struct file *filep)
 		kgsl_remove_mem_entry(entry);
 
 	if (private->pagetable != NULL) {
-#ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
 		kgsl_yamato_cleanup_pt(&kgsl_driver.yamato_device,
 					private->pagetable);
 		kgsl_mmu_destroypagetableobject(private->pagetable);
-#endif
 		private->pagetable = NULL;
 	}
 
@@ -346,7 +312,6 @@ static int kgsl_open(struct inode *inodep, struct file *filep)
 	kgsl_hw_get_locked();
 
 	/*NOTE: this must happen after first_open */
-#ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
 	private->pagetable =
 		kgsl_mmu_createpagetableobject(&kgsl_driver.yamato_device.mmu);
 	if (private->pagetable == NULL) {
@@ -360,9 +325,6 @@ static int kgsl_open(struct inode *inodep, struct file *filep)
 		private->pagetable = NULL;
 		goto done;
 	}
-#else
-	private->pagetable = kgsl_driver.yamato_device.mmu.hwpagetable;
-#endif
 	private->vmalloc_size = 0;
 done:
 	kgsl_hw_put_locked(true);
@@ -1073,52 +1035,10 @@ static long kgsl_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 	return result;
 }
 
-static int kgsl_mmap(struct file *file, struct vm_area_struct *vma)
-{
-	int result;
-	struct kgsl_memdesc *memdesc = NULL;
-	unsigned long vma_size = vma->vm_end - vma->vm_start;
-	unsigned long vma_offset = vma->vm_pgoff << PAGE_SHIFT;
-	struct kgsl_device *device = NULL;
-
-	mutex_lock(&kgsl_driver.mutex);
-
-	device = &kgsl_driver.yamato_device;
-
-	/*allow yamato memstore to be mapped read only */
-	if (vma_offset == device->memstore.physaddr) {
-		if (vma->vm_flags & VM_WRITE) {
-			result = -EPERM;
-			goto done;
-		}
-		memdesc = &device->memstore;
-	}
-
-	if (memdesc->size != vma_size) {
-		KGSL_MEM_ERR("file %p bad size %ld, should be %d\n",
-			file, vma_size, memdesc->size);
-		result = -EINVAL;
-		goto done;
-	}
-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
-
-	result = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
-				vma_size, vma->vm_page_prot);
-	if (result != 0) {
-		KGSL_MEM_ERR("remap_pfn_range returned %d\n",
-				result);
-		goto done;
-	}
-done:
-	mutex_unlock(&kgsl_driver.mutex);
-	return result;
-}
-
 static struct file_operations kgsl_fops = {
 	.owner = THIS_MODULE,
 	.release = kgsl_release,
 	.open = kgsl_open,
-	.mmap = kgsl_mmap,
 	.unlocked_ioctl = kgsl_ioctl,
 };
 
@@ -1180,9 +1100,6 @@ static int __devinit kgsl_platform_probe(struct platform_device *pdev)
 	BUG_ON(kgsl_driver.grp_clk != NULL);
 	BUG_ON(kgsl_driver.imem_clk != NULL);
 	BUG_ON(kgsl_driver.ebi1_clk != NULL);
-#if defined (CONFIG_ARCH_MSM7227) || defined (CONFIG_ARCH_MSM7X30)
-	BUG_ON(kgsl_driver.grp_pclk != NULL);
-#endif
 
 	kgsl_driver.pdev = pdev;
 
@@ -1196,6 +1113,13 @@ static int __devinit kgsl_platform_probe(struct platform_device *pdev)
 		goto done;
 	}
 	kgsl_driver.grp_clk = clk;
+
+	clk = clk_get(&pdev->dev, "grp_pclk");
+	if (IS_ERR(clk)) {
+		KGSL_DRV_ERR("no grp_pclk, continuing\n");
+		clk = NULL;
+	}
+	kgsl_driver.grp_pclk = clk;
 
 	clk = clk_get(&pdev->dev, "imem_clk");
 	if (IS_ERR(clk)) {
@@ -1213,15 +1137,6 @@ static int __devinit kgsl_platform_probe(struct platform_device *pdev)
 	}
 	kgsl_driver.ebi1_clk = clk;
 
-#if defined (CONFIG_ARCH_MSM7227) || defined (CONFIG_ARCH_MSM7X30)
-	clk = clk_get(&pdev->dev, "grp_pclk");
-	if (IS_ERR(clk)) {
-		result = PTR_ERR(clk);
-		KGSL_DRV_ERR("clk_get(grp_pclk) returned %d\n", result);
-		goto done;
-	}
-	kgsl_driver.grp_pclk = clk;
-#endif
 	/*acquire interrupt */
 	kgsl_driver.interrupt_num = platform_get_irq(pdev, 0);
 	if (kgsl_driver.interrupt_num <= 0) {

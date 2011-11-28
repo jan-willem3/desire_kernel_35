@@ -17,7 +17,6 @@
 #include <linux/kernel.h>
 #include <asm/io.h>
 #include <linux/msm_mdp.h>
-#include <mach/debug_display.h>
 
 #include "mdp_hw.h"
 #include "mdp_ppp.h"
@@ -577,7 +576,7 @@ int mdp_ppp_validate_blit(struct mdp_info *mdp, struct mdp_blit_req *req)
 			(req->dst_rect.w != req->src_rect.h))) ||
 			((req->dst_rect.w == 1) && ((req->src_rect.h != 1) ||
 			(req->dst_rect.h != req->src_rect.w))))) {
-			PR_DISP_ERR("mpd_ppp: error scaling when size is 1!\n");
+			pr_err("mpd_ppp: error scaling when size is 1!\n");
 			return -EINVAL;
 		}
 	} else {
@@ -586,7 +585,7 @@ int mdp_ppp_validate_blit(struct mdp_info *mdp, struct mdp_blit_req *req)
 			(req->dst_rect.h != req->src_rect.h))) ||
 			((req->dst_rect.h == 1) && ((req->src_rect.h != 1) ||
 			(req->dst_rect.h != req->src_rect.h))))) {
-			PR_DISP_ERR("mpd_ppp: error scaling when size is 1!\n");
+			pr_err("mpd_ppp: error scaling when size is 1!\n");
 			return -EINVAL;
 		}
 	}
@@ -594,7 +593,7 @@ int mdp_ppp_validate_blit(struct mdp_info *mdp, struct mdp_blit_req *req)
 	/* WORKAROUND FOR HARDWARE BUG IN BG TILE FETCH */
 	if (unlikely(req->src_rect.h == 0 ||
 		     req->src_rect.w == 0)) {
-		PR_DISP_INFO("mdp_ppp: src img of zero size!\n");
+		pr_info("mdp_ppp: src img of zero size!\n");
 		return -EINVAL;
 	}
 	if (unlikely(req->dst_rect.h == 0 ||
