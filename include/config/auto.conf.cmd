@@ -219,6 +219,7 @@ deps_config := \
 	sound/pcmcia/Kconfig \
 	sound/usb/Kconfig \
 	sound/sh/Kconfig \
+	sound/htcleo/Kconfig \
 	sound/mips/Kconfig \
 	sound/spi/Kconfig \
 	sound/atmel/Kconfig \
