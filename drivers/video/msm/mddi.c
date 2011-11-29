@@ -921,7 +921,7 @@ static int mddi_probe(struct platform_device *pdev)
 		goto error_mddi_interface;
 	}
 
-	/*if (pdata->vsync_irq) {
+	if (pdata->vsync_irq) {
 		mddi->client_vsync_res.start = pdata->vsync_irq;
 		mddi->client_vsync_res.end = pdata->vsync_irq;
 		mddi->client_vsync_res.flags = IORESOURCE_IRQ;
@@ -929,7 +929,6 @@ static int mddi_probe(struct platform_device *pdev)
 		mddi->client_pdev.resource = &mddi->client_vsync_res;
 		mddi->client_pdev.num_resources = 1;
 	}
-	*/
 
 	mddi->client_pdev.dev.platform_data = &mddi->client_data;
 	printk(KERN_INFO "mddi: publish: %s\n", mddi->client_name);
