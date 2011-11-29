@@ -17,8 +17,5 @@ fi;
 #packaging
 cp ./currentrelease.txt ../compiled/currentrelease.txt
 cp ./arch/arm/boot/zImage ../compiled/zImage
-cp -r ./drivers/net/wireless/bcm4329/*.ko ../compiled/root/system/lib/modules
-cp -r ./fs/*.ko ../compiled/root/system/lib/modules
-cp -r ./net/*.ko ../compiled/root/system/lib/modules
-cp -r ./sound/*.ko ../compiled/root/system/lib/modules
+find ./ -type f -name "*.ko" -exec cp {} ../compiled/root/system/lib/modules/ \;
 
