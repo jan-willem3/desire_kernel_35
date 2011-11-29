@@ -1306,7 +1306,7 @@ void bcm_msm_hs_request_clock_off_locked(struct uart_port *uport)
 		msm_hs_write(uport, UARTDM_IMR_ADDR, msm_uport->imr_reg);
 	}
 }
-/* EXPORT_SYMBOL(bcm_msm_hs_request_clock_off_locked); */
+EXPORT_SYMBOL(bcm_msm_hs_request_clock_off_locked);
 
 /* request to turn off uart clock once pending TX is flushed */
 void bcm_msm_hs_request_clock_off(struct uart_port *uport)
@@ -1317,7 +1317,7 @@ void bcm_msm_hs_request_clock_off(struct uart_port *uport)
 	bcm_msm_hs_request_clock_off_locked(uport);
 	spin_unlock_irqrestore(&uport->lock, flags);
 }
-/* EXPORT_SYMBOL(bcm_msm_hs_request_clock_off); */
+EXPORT_SYMBOL(bcm_msm_hs_request_clock_off);
 
 void bcm_msm_hs_request_clock_on_locked(struct uart_port *uport)
 {
@@ -1374,7 +1374,7 @@ void bcm_msm_hs_request_clock_on_locked(struct uart_port *uport)
 	#endif
 	}
 }
-/* EXPORT_SYMBOL(bcm_msm_hs_request_clock_on_locked); */
+EXPORT_SYMBOL(bcm_msm_hs_request_clock_on_locked);
 
 void bcm_msm_hs_request_clock_on(struct uart_port *uport)
 {
@@ -1383,7 +1383,7 @@ void bcm_msm_hs_request_clock_on(struct uart_port *uport)
 	bcm_msm_hs_request_clock_on_locked(uport);
 	spin_unlock_irqrestore(&uport->lock, flags);
 }
-/* EXPORT_SYMBOL(bcm_msm_hs_request_clock_on); */
+EXPORT_SYMBOL(bcm_msm_hs_request_clock_on);
 
 static int
 msm_uartdm_ioctl(struct uart_port *uport, unsigned int cmd, unsigned long arg)

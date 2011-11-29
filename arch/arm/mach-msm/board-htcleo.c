@@ -540,17 +540,28 @@ MODULE_PARM_DESC(bdaddress, "BT MAC ADDRESS");
 static struct msm_serial_hs_platform_data msm_uart_dm1_pdata =
 {
 	/* Chip to Device */
-	.rx_wakeup_irq = MSM_GPIO_TO_INT(HTCLEO_GPIO_BT_HOST_WAKE),
+	.rx_wakeup_irq = -1,
 	.inject_rx_on_wakeup = 0,
-	.cpu_lock_supported = 0,
-
-	/* for bcm */
-	.bt_wakeup_pin_supported = 1,
-	.bt_wakeup_pin   = HTCLEO_GPIO_BT_CHIP_WAKE,
-	.host_wakeup_pin = HTCLEO_GPIO_BT_HOST_WAKE,
-
+	#ifdef CONFIG_SERIAL_BCM_BT_LPM
+		.exit_lpm_cb = bcm_bt_lpm_exit_lpm_locked,
+	#endif
+};
+#ifdef CONFIG_SERIAL_BCM_BT_LPM
+static struct bcm_bt_lpm_platform_data bcm_bt_lpm_pdata = {
+	.gpio_wake = HTCLEO_GPIO_BT_CHIP_WAKE,
+	.gpio_host_wake = HTCLEO_GPIO_BT_HOST_WAKE,
+	.request_clock_off_locked = bcm_msm_hs_request_clock_off_locked,
+	.request_clock_on_locked = bcm_msm_hs_request_clock_on_locked,
 };
 
+struct platform_device bcm_bt_lpm_device = {
+	.name = "bcm_bt_lpm",
+	.id = 0,
+	.dev = {
+		.platform_data = &bcm_bt_lpm_pdata,
+	},
+};
+#endif
 static struct platform_device htcleo_rfkill =
 {
 	.name = "htcleo_rfkill",
