@@ -547,18 +547,19 @@ static struct msm_serial_hs_platform_data msm_uart_dm1_pdata =
 	#ifdef CONFIG_SERIAL_BCM_BT_LPM
 		.exit_lpm_cb = bcm_bt_lpm_exit_lpm_locked,
 	#endif
-	#ifdef CONFIG_SERIAL_BCM_BT_LPM
-	static struct bcm_bt_lpm_platform_data bcm_bt_lpm_pdata = {
-		.gpio_wake = HTCLEO_GPIO_BT_CHIP_WAKE,
-		.gpio_host_wake = HTCLEO_GPIO_BT_HOST_WAKE,
-		.request_clock_off_locked = bcm_msm_hs_request_clock_off_locked,
-		.request_clock_on_locked = bcm_msm_hs_request_clock_on_locked,
-	};
+};
+#ifdef CONFIG_SERIAL_BCM_BT_LPM
+static struct bcm_bt_lpm_platform_data bcm_bt_lpm_pdata = {
+	.gpio_wake = HTCLEO_GPIO_BT_WAKE,
+	.gpio_host_wake = HTCLEO_GPIO_BT_HOST_WAKE,
+	.request_clock_off_locked = bcm_msm_hs_request_clock_off_locked,
+	.request_clock_on_locked = bcm_msm_hs_request_clock_on_locked,
+};
 
-	struct platform_device bcm_bt_lpm_device = {
-		.name = "bcm_bt_lpm",
-		.id = 0,
-		.dev = {
+struct platform_device bcm_bt_lpm_device = {
+	.name = "bcm_bt_lpm",
+	.id = 0,
+	.dev = {
 		.platform_data = &bcm_bt_lpm_pdata,
 	},
 };
