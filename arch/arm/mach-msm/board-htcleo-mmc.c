@@ -238,7 +238,7 @@ int htcleo_wifi_power(int on)
 		vreg_enable(wlan_vreg_3);
 	} else {
 		config_gpio_table(wifi_off_gpio_table, ARRAY_SIZE(wifi_off_gpio_table));
-		mdelay(100);
+		mdelay(200);
 		vreg_disable(wlan_vreg_3);
 	}
 	
