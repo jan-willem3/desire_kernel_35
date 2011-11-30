@@ -191,8 +191,8 @@ struct clkctl_acpu_speed acpu_freq_tbl[] = {
 	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1300, 128000 },
 	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1300, 128000 },
 	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1300, 128000 },
-	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1325, 128000 },
-	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
+	//{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1325, 128000 },
+	//{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
 #endif
 #endif
 #ifdef CONFIG_HTCLEO_EXOVERCLOCK
@@ -549,7 +549,7 @@ void __init acpu_freq_tbl_fixup(void)
 #ifdef	CONFIG_HTCLEO_EXOVERCLOCK
 		max_acpu_khz = 1536000;
 #elif   CONFIG_HTCLEO_OVERCLOCK
-		max_acpu_khz = 1190400;
+		max_acpu_khz = 1113600;
 #else
 		max_acpu_khz = 998400;
 #endif
