@@ -174,29 +174,25 @@ struct clkctl_acpu_speed acpu_freq_tbl[] = {
 	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1250, 128000 },
 	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1275, 128000 },
 	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1300, 128000 },
-	// disable all speeds above 1152 MHz for now -- marc1706
-	//{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
+	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
 #elif CONFIG_HTCLEO_UNDERVOLT_925 
 	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1225, 128000 },
 	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1250, 128000 },
 	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1275, 128000 },
 	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1300, 128000 },
-	// disable all speeds above 1152 MHz for now -- marc1706
-	//{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
+	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
 #elif CONFIG_HTCLEO_UNDERVOLT_800
 	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1225, 128000 },
 	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1250, 128000 },
 	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1275, 128000 },
 	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1300, 128000 },
-	// disable all speeds above 1152 MHz for now -- marc1706
-	//{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
+	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
 #else
 	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1300, 128000 },
 	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1300, 128000 },
 	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1300, 128000 },
 	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1325, 128000 },
-	// disable all speeds above 1152 MHz for now -- marc1706
-	//{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
+	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
 #endif
 #endif
 #ifdef CONFIG_HTCLEO_EXOVERCLOCK
@@ -212,7 +208,6 @@ struct clkctl_acpu_speed acpu_freq_tbl[] = {
 #endif
 	{ 0 },
 };
-static unsigned long max_axi_rate;
 
 /* select the standby clock that is used when switching scpll
  * frequencies
@@ -236,9 +231,9 @@ static void __init acpuclk_init_cpufreq_table(void)
 		freq_table[i].index = i;
 		freq_table[i].frequency = CPUFREQ_ENTRY_INVALID;
 
-		/* Skip speeds using the global pll */
-		if (acpu_freq_tbl[i].acpu_khz == 256000 ||
-				acpu_freq_tbl[i].acpu_khz == 19200)
+		/* Skip speeds we don't want */
+		if (	acpu_freq_tbl[i].acpu_khz == 19200 ||
+			acpu_freq_tbl[i].acpu_khz == 256000)
 			continue;
 
 		vdd = acpu_freq_tbl[i].vdd;
@@ -634,16 +629,7 @@ static void __init acpuclk_init(void)
 					   init_khz, speed->acpu_khz);
 
 	loops_per_jiffy = drv_state.current_speed->lpj;
-
-	speed = acpu_freq_tbl + ARRAY_SIZE(acpu_freq_tbl) - 2;
-	max_axi_rate = speed->axiclk_khz * 1000;
 }
-
-unsigned long acpuclk_get_max_axi_rate(void)
-{
-	return max_axi_rate;
-}
-EXPORT_SYMBOL(acpuclk_get_max_axi_rate);
 
 unsigned long acpuclk_get_rate(void)
 {
@@ -721,7 +707,7 @@ ssize_t acpuclk_get_vdd_levels_str(char *buf)
 void acpuclk_set_vdd(unsigned acpu_khz, int vdd)
 {
 	int i;
-	vdd = (vdd / HTCLEO_TPS65023_UV_STEP_MV) * HTCLEO_TPS65023_UV_STEP_MV;
+	vdd = vdd / 25 * 25;	//! regulator only accepts multiples of 25 (mV)
 	mutex_lock(&drv_state.lock);
 	for (i = 0; acpu_freq_tbl[i].acpu_khz; i++)
 	{
