@@ -48,6 +48,7 @@
 #include <mach/perflock.h>
 #include <mach/htc_usb.h>
 #include <mach/msm_flashlight.h>
+#include <mach/perflock.h>
 #include <mach/msm_serial_hs.h>
 #include <mach/msm_hsusb.h>
 #include <mach/msm_serial_debugger.h>
@@ -521,39 +522,85 @@ static struct platform_device msm_camera_sensor_s5k3e2fx =
 	},
 };
 
+//-----PATCH for BT mac address
+int is_valid_mac_address(char *mac)
+{
+	int i =0;
+	while(i<17){
+		if( (i%3) == 2){
+			if ((mac[i] !=':') && (mac[i] = '-')) return 0;
+			if (mac[i] == '-') mac[i] = ':';
+		}else{
+			if ( !( ((mac[i] >= '0') && (mac[i] <= '9')) ||
+				((mac[i] >= 'a') && (mac[i] <= 'f')) ||
+				((mac[i] >= 'A') && (mac[i] <= 'F')))
+			) return 0;	
+		}
+		i++;
+	}
+	if (mac[i] != '\0') return 0;
+	return 1;
+}
+//-----------------------------
+
 ///////////////////////////////////////////////////////////////////////
 // bluetooth
 ///////////////////////////////////////////////////////////////////////
-
-static char bdaddress[20];
+#define MAC_ADDRESS_SIZE_C	17
+static char bdaddress[MAC_ADDRESS_SIZE_C+1] = "";
 static void bt_export_bd_address(void)
  {
 	unsigned char cTemp[6];
-
-	memcpy(cTemp, get_bt_bd_ram(), 6);
-	sprintf(bdaddress, "%02x:%02x:%02x:%02x:%02x:%02x", cTemp[0], cTemp[1], cTemp[2], cTemp[3], cTemp[4], cTemp[5]);
+	if (!is_valid_mac_address(bdaddress)){
+		memcpy(cTemp, get_bt_bd_ram(), 6);
+		sprintf(bdaddress, "%02x:%02x:%02x:%02x:%02x:%02x", cTemp[0], cTemp[1], cTemp[2], cTemp[3], cTemp[4], cTemp[5]);
 	pr_info("BD_ADDRESS=%s\n", bdaddress);
+}
 }
 
 module_param_string(bdaddress, bdaddress, sizeof(bdaddress), S_IWUSR | S_IRUGO);
 MODULE_PARM_DESC(bdaddress, "BT MAC ADDRESS");
-
-#ifdef CONFIG_SERIAL_MSM_HS
-static struct msm_serial_hs_platform_data msm_uart_dm1_pdata =
+#
+//-----added alias for bt mac address parameter--------
+static int __init htcleo_bt_macaddress_setup(char *bootconfig) 
 {
-	/* Chip to Device */
+	printk("%s: cmdline bt mac config=%s | %s\n",__FUNCTION__, bootconfig, __FILE__);
+	strncpy(bdaddress, bootconfig, MAC_ADDRESS_SIZE_C);
+    return 1;
+}
+__setup("bt.mac=", htcleo_bt_macaddress_setup);
+//-----------------------------------------------------
+
+//-----------------------------------------------------
+
+//#ifdef CONFIG_SERIAL_MSM_HS
+//static struct msm_serial_hs_platform_data msm_uart_dm1_pdata =
+//{
+//	/* Chip to Device */
+//	.rx_wakeup_irq = MSM_GPIO_TO_INT(HTCLEO_GPIO_BT_HOST_WAKE),
+//	.inject_rx_on_wakeup = 0,
+//	.cpu_lock_supported = 0,
+
+//	/* for bcm */
+//	.bt_wakeup_pin_supported = 1,
+//	.bt_wakeup_pin   = HTCLEO_GPIO_BT_CHIP_WAKE,
+//	.host_wakeup_pin = HTCLEO_GPIO_BT_HOST_WAKE,
+
+//};
+//#endif
+
+//Bluetooth/////////////////////////////////////
+static struct msm_serial_hs_platform_data msm_uart_dm1_pdata = {
 	.rx_wakeup_irq = -1,
 	.inject_rx_on_wakeup = 0,
-	#ifdef CONFIG_SERIAL_BCM_BT_LPM
-		.exit_lpm_cb = bcm_bt_lpm_exit_lpm_locked,
-	#endif
+	.exit_lpm_cb = bcm_bt_lpm_exit_lpm_locked,
 };
-#ifdef CONFIG_SERIAL_BCM_BT_LPM
+
 static struct bcm_bt_lpm_platform_data bcm_bt_lpm_pdata = {
 	.gpio_wake = HTCLEO_GPIO_BT_CHIP_WAKE,
 	.gpio_host_wake = HTCLEO_GPIO_BT_HOST_WAKE,
-	.request_clock_off_locked = bcm_msm_hs_request_clock_off_locked,
-	.request_clock_on_locked = bcm_msm_hs_request_clock_on_locked,
+	.request_clock_off_locked = msm_hs_request_clock_off_locked,
+	.request_clock_on_locked = msm_hs_request_clock_on_locked,
 };
 
 struct platform_device bcm_bt_lpm_device = {
@@ -563,8 +610,8 @@ struct platform_device bcm_bt_lpm_device = {
 		.platform_data = &bcm_bt_lpm_pdata,
 	},
 };
-#endif
-#endif
+
+
 
 static uint32_t bt_gpio_table[] = {
 	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_UART1_RTS, 2, GPIO_OUTPUT,
@@ -585,24 +632,7 @@ static uint32_t bt_gpio_table[] = {
 		      GPIO_PULL_DOWN, GPIO_4MA),
 };
 
-static uint32_t bt_gpio_table_rev_CX[] = {
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_UART1_RTS, 2, GPIO_OUTPUT,
-		      GPIO_PULL_UP, GPIO_8MA),
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_UART1_CTS, 2, GPIO_INPUT,
-		      GPIO_PULL_UP, GPIO_8MA),
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_UART1_RX, 2, GPIO_INPUT,
-		      GPIO_PULL_UP, GPIO_8MA),
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_UART1_TX, 2, GPIO_OUTPUT,
-		      GPIO_PULL_UP, GPIO_8MA),
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_RESET_N, 0, GPIO_OUTPUT,
-		      GPIO_PULL_DOWN, GPIO_4MA),
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_SHUTDOWN_N, 0, GPIO_OUTPUT,
-		      GPIO_PULL_DOWN, GPIO_4MA),
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_CHIP_WAKE, 0, GPIO_OUTPUT,
-		      GPIO_PULL_DOWN, GPIO_4MA),
-	PCOM_GPIO_CFG(HTCLEO_GPIO_BT_HOST_WAKE, 0, GPIO_INPUT,
-		      GPIO_PULL_DOWN, GPIO_4MA),
-};
+////////////////////////////////////////////////
 
 static struct platform_device htcleo_rfkill =
 {
@@ -1033,11 +1063,22 @@ static void __init htcleo_init(void)
 
 	init_dex_comm();
 
-	config_gpio_table(bt_gpio_table, ARRAY_SIZE(bt_gpio_table));
+//#ifdef CONFIG_SERIAL_MSM_HS
+// 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
+//  msm_device_uart_dm1.name = "msm_serial_hs_bcm"; /* for bcm */
+//  msm_device_uart_dm1.resource[3].end = 6;
+//#endif
 
 	bt_export_bd_address();
 	htcleo_audio_init();
 	
+//Bluetooth///////////////////////////////////
+  config_gpio_table(bt_gpio_table, ARRAY_SIZE(bt_gpio_table));
+  msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
+  msm_device_uart_dm1.name = "msm_serial_hs"; /* for bcm */
+  msm_device_uart_dm1.resource[3].end = 6;
+//////////////////////////////////////////////
+
 	msm_device_i2c_init();
 
 	/* set the gpu power rail to manual mode so clk en/dis will not
@@ -1047,10 +1088,6 @@ static void __init htcleo_init(void)
 	htcleo_kgsl_power(false);
 	mdelay(100);
 	htcleo_kgsl_power(true);
-
-	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
-	msm_device_uart_dm1.name = "msm_serial_hs_bcm"; /* for bcm */
-    	msm_device_uart_dm1.resource[3].end = 6;
 
 	platform_add_devices(devices, ARRAY_SIZE(devices));
 
