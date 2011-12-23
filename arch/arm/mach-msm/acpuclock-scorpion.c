@@ -22,11 +22,13 @@
 #include <linux/errno.h>
 #include <linux/cpufreq.h>
 #include <linux/regulator/consumer.h>
+#include <linux/regulator/driver.h>
 
 #include <mach/board.h>
 #include <mach/msm_iomap.h>
 
 #include "acpuclock.h"
+#include "avs.h"
 #include "proc_comm.h"
 #include "clock.h"
 #ifdef CONFIG_CPU_FREQ_VDD_LEVELS
@@ -62,6 +64,19 @@ struct clkctl_acpu_speed {
 	unsigned axiclk_khz;
 };
 
+static unsigned long max_axi_rate;
+
+struct regulator {
+	struct device *dev;
+	struct list_head list;
+	int uA_load;
+	int min_uV;
+	int max_uV;
+	char *supply_name;
+	struct device_attribute dev_attr;
+	struct regulator_dev *rdev;
+};
+
 /* clock sources */
 #define CLK_TCXO	0 /* 19.2 MHz */
 #define CLK_GLOBAL_PLL	1 /* 768 MHz */
@@ -76,138 +91,36 @@ struct clkctl_acpu_speed {
 #define SRC_PLL1	3 /* 768 MHz */
 
 struct clkctl_acpu_speed acpu_freq_tbl[] = {
-#ifdef CONFIG_HTCLEO_UNDERVOLT_1000
-	{  19200, CCTL(CLK_TCXO, 1),		SRC_RAW, 0, 0, 1000, 14000 },
-	{ 128000, CCTL(CLK_TCXO, 1),		SRC_AXI, 0, 0, 1000, 14000 },
+	{  19200, CCTL(CLK_TCXO, 1),		SRC_RAW, 0, 0, 975, 14000},
+	{ 128000, CCTL(CLK_TCXO, 1),		SRC_AXI, 0, 0, 975, 14000 },
 	{ 245000, CCTL(CLK_MODEM_PLL, 1),	SRC_RAW, 0, 0, 1000, 29000 },
-	//{ 256000, CCTL(CLK_GLOBAL_PLL, 3),	SRC_RAW, 0, 0, 1000, 29000 },
-	{ 384000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0A, 0, 1000, 58000 },
-	{ 422400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0B, 0, 1000, 117000 },
-	{ 460800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0C, 0, 1000, 117000 },
-	{ 499200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0D, 0, 1025, 117000 },
-	{ 537600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0E, 0, 1050, 117000 },
-	{ 576000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0F, 0, 1050, 117000 },
-	{ 614400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x10, 0, 1075, 117000 },
-	{ 652800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x11, 0, 1100, 117000 },
-	{ 691200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x12, 0, 1125, 117000 },
-	{ 729600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x13, 0, 1150, 117000 },
-	{ 768000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x14, 0, 1150, 128000 },
-	{ 806400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x15, 0, 1175, 128000 },
-	{ 844800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x16, 0, 1200, 128000 },
-	{ 883200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x17, 0, 1200, 128000 },
-	{ 921600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x18, 0, 1225, 128000 },
-	{ 960000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x19, 0, 1225, 128000 },
-	{ 998400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1A, 0, 1225, 128000 },
-#elif CONFIG_HTCLEO_UNDERVOLT_925 
-	// should work with most of HD2s
-	{  19200, CCTL(CLK_TCXO, 1),		SRC_RAW, 0, 0, 925, 14000 },
-	{ 128000, CCTL(CLK_TCXO, 1),		SRC_AXI, 0, 0, 925, 14000 },
-	{ 245000, CCTL(CLK_MODEM_PLL, 1),	SRC_RAW, 0, 0, 925, 29000 },
-	//{ 256000, CCTL(CLK_GLOBAL_PLL, 3),	SRC_RAW, 0, 0, 925, 29000 },
-	{ 384000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0A, 0, 950, 58000 },
-	{ 422400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0B, 0, 975, 117000 },
-	{ 460800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0C, 0, 1000, 117000 },
-	{ 499200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0D, 0, 1025, 117000 },
-	{ 537600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0E, 0, 1050, 117000 },
-	{ 576000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0F, 0, 1050, 117000 },
-	{ 614400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x10, 0, 1075, 117000 },
-	{ 652800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x11, 0, 1100, 117000 },
-	{ 691200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x12, 0, 1125, 117000 },
-	{ 729600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x13, 0, 1150, 117000 },
-	{ 768000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x14, 0, 1150, 128000 },
-	{ 806400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x15, 0, 1175, 128000 },
-	{ 844800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x16, 0, 1200, 128000 },
-	{ 883200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x17, 0, 1200, 128000 },
-	{ 921600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x18, 0, 1225, 128000 },
-	{ 960000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x19, 0, 1225, 128000 },
-	{ 998400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1A, 0, 1225, 128000 },
-#elif CONFIG_HTCLEO_UNDERVOLT_800 
-	// not working yet
-	{  19200, CCTL(CLK_TCXO, 1),		SRC_RAW, 0, 0, 850, 14000 },
-	{ 128000, CCTL(CLK_TCXO, 1),		SRC_AXI, 0, 0, 850, 14000 },
-	{ 245000, CCTL(CLK_MODEM_PLL, 1),	SRC_RAW, 0, 0, 850, 29000 },
-	//{ 256000, CCTL(CLK_GLOBAL_PLL, 3),	SRC_RAW, 0, 0, 850, 29000 },
-	{ 384000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0A, 0, 850, 58000 },
-	{ 422400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0B, 0, 875, 117000 },
-	{ 460800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0C, 0, 900, 117000 },
-	{ 499200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0D, 0, 925, 117000 },
-	{ 537600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0E, 0, 950, 117000 },
-	{ 576000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0F, 0, 950, 117000 },
-	{ 614400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x10, 0, 975, 117000 },
-	{ 652800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x11, 0, 1000, 117000 },
-	{ 691200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x12, 0, 1025, 117000 },
-	{ 729600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x13, 0, 1050, 117000 },
-	{ 768000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x14, 0, 1125, 128000 },
-	{ 806400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x15, 0, 1125, 128000 },
-	{ 844800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x16, 0, 1150, 128000 },
-	{ 883200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x17, 0, 1150, 128000 },
-	{ 921600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x18, 0, 1175, 128000 },
-	{ 960000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x19, 0, 1175, 128000 },
-	{ 998400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1A, 0, 1200, 128000 },
-#else
-	{  19200, CCTL(CLK_TCXO, 1),		SRC_RAW, 0, 0, 1050, 14000},
-	{ 128000, CCTL(CLK_TCXO, 1),		SRC_AXI, 0, 0, 1050, 14000 },
-	{ 245000, CCTL(CLK_MODEM_PLL, 1),	SRC_RAW, 0, 0, 1050, 29000 },
 	/* Work arround for acpu resume hung, GPLL is turn off by arm9 */
 	/*{ 256000, CCTL(CLK_GLOBAL_PLL, 3),	SRC_RAW, 0, 0, 1050, 29000 },*/
-	{ 384000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0A, 0, 1050, 58000 },
-	{ 422400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0B, 0, 1050, 117000 },
-	{ 460800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0C, 0, 1050, 117000 },
-	{ 499200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0D, 0, 1075, 117000 },
-	{ 537600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0E, 0, 1100, 117000 },
-	{ 576000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x0F, 0, 1100, 117000 },
-	{ 614400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x10, 0, 1125, 117000 },
-	{ 652800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x11, 0, 1150, 117000 },
-	{ 691200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x12, 0, 1175, 117000 },
-	{ 729600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x13, 0, 1200, 117000 },
-	{ 768000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x14, 0, 1200, 128000 },
-	{ 806400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x15, 0, 1225, 128000 },
-	{ 844800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x16, 0, 1250, 128000 },
-	{ 883200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x17, 0, 1275, 128000 },
-	{ 921600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x18, 0, 1300, 128000 },
-	{ 960000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x19, 0, 1300, 128000 },
-	{ 998400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1A, 0, 1300, 128000 },
-#endif
-#ifdef	CONFIG_HTCLEO_OVERCLOCK
-#ifdef CONFIG_HTCLEO_UNDERVOLT_1000
-	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1225, 128000 },
-	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1250, 128000 },
-	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1275, 128000 },
-	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1300, 128000 },
+        { 384000, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x0A, 0, 1025, 58000 },
+        { 422400, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x0B, 0, 1050, 117000 },
+        { 460800, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x0C, 0, 1050, 117000 },
+        { 499200, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x0D, 0, 1075, 117000 },
+        { 537600, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x0E, 0, 1075, 117000 },
+        { 576000, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x0F, 0, 1100, 117000 },
+        { 614400, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x10, 0, 1100, 117000 },
+        { 652800, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x11, 0, 1125, 117000 },
+        { 691200, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x12, 0, 1150, 117000 },
+        { 729600, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x13, 0, 1175, 117000 },
+        { 768000, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x14, 0, 1200, 128000 },
+        { 806400, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x15, 0, 1225, 128000 },
+        { 844800, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x16, 0, 1250, 128000 },
+        { 883200, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x17, 0, 1275, 128000 },
+        { 921600, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x18, 0, 1275, 128000 },
+        { 960000, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x19, 0, 1275, 128000 },
+        { 998400, CCTL(CLK_TCXO, 1),               SRC_SCPLL, 0x1A, 0, 1275, 128000 },
+	{ 1036800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1B, 0, 1275, 128000 },
+	{ 1075200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1C, 0, 1275, 128000 },
+	{ 1113600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1D, 0, 1275, 128000 },
+        { 1152000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1E, 0, 1300, 128000 },
 	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
-#elif CONFIG_HTCLEO_UNDERVOLT_925 
-	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1225, 128000 },
-	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1250, 128000 },
-	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1275, 128000 },
-	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1300, 128000 },
-	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
-#elif CONFIG_HTCLEO_UNDERVOLT_800
-	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1225, 128000 },
-	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1250, 128000 },
-	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1275, 128000 },
-	{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1300, 128000 },
-	{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
-#else
-	{ 1036800, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1B, 0, 1300, 128000 },
-	{ 1075200, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1C, 0, 1300, 128000 },
-	{ 1113600, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1D, 0, 1300, 128000 },
-	//{ 1152000, CCTL(CLK_TCXO, 1), 		SRC_SCPLL, 0x1E, 0, 1325, 128000 },
-	//{ 1190400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x1F, 0, 1325, 128000 },
-#endif
-#endif
-#ifdef CONFIG_HTCLEO_EXOVERCLOCK
-	{ 1228800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x20, 0, 1325, 128000 },
-	{ 1267200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x21, 0, 1350, 128000 },
-	{ 1305600, CCTL(CLK_TCXO, 1),           SRC_SCPLL, 0x22, 0, 1350, 128000 },
-	{ 1344000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x23, 0, 1350, 128000 }, 
-        { 1382400, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x24, 0, 1350, 128000 },
-        { 1420800, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x25, 0, 1350, 128000 },
-        { 1459200, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x26, 0, 1350, 128000 },
-        { 1497600, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x27, 0, 1350, 128000 },
-        { 1536000, CCTL(CLK_TCXO, 1),		SRC_SCPLL, 0x28, 0, 1350, 128000 },
-#endif
 	{ 0 },
 };
+static unsigned long max_axi_rate;
 
 /* select the standby clock that is used when switching scpll
  * frequencies
@@ -231,9 +144,9 @@ static void __init acpuclk_init_cpufreq_table(void)
 		freq_table[i].index = i;
 		freq_table[i].frequency = CPUFREQ_ENTRY_INVALID;
 
-		/* Skip speeds we don't want */
-		if (	acpu_freq_tbl[i].acpu_khz == 19200 ||
-			acpu_freq_tbl[i].acpu_khz == 256000)
+		/* Skip speeds using the global pll */
+		if (acpu_freq_tbl[i].acpu_khz == 256000 ||
+				acpu_freq_tbl[i].acpu_khz == 19200)
 			continue;
 
 		vdd = acpu_freq_tbl[i].vdd;
@@ -268,6 +181,7 @@ struct clock_state {
 	unsigned long			wait_for_irq_khz;
 	struct clk*			clk_ebi1;
 	struct regulator                *regulator;
+	int (*acpu_set_vdd) (int mvolts);
 };
 
 static struct clock_state drv_state = { 0 };
@@ -348,7 +262,7 @@ static void scpll_set_freq(uint32_t lval)
 			;
 
 		/* completion bit is not reliable for SHOT switch */
-		udelay(25);
+		udelay(15);
 	}
 
 	/* write the new L val and switch mode */
@@ -391,27 +305,41 @@ static void select_clock(unsigned src, unsigned config)
 	writel(val | ((src & 3) << 1), SPSS_CLK_SEL_ADDR);
 }
 
-static int acpuclk_set_vdd_level(int vdd)
+static int acpu_set_vdd(int vdd)
 {
 	if (!drv_state.regulator || IS_ERR(drv_state.regulator)) {
 		drv_state.regulator = regulator_get(NULL, "acpu_vcore");
 		if (IS_ERR(drv_state.regulator)) {
-			pr_info("acpuclk_set_vdd_level %d no regulator\n", vdd);
+			 pr_info("acpu_set_vdd %d no regulator\n", vdd);
 			/* Assume that the PMIC supports scaling the processor
 			 * to its maximum frequency at its default voltage.
 			 */
-			return 0;
+			return -ENODEV;
 		}
-		pr_info("acpuclk_set_vdd_level got regulator setting vdd_level %d \n", vdd);
+		pr_info("acpu_set_vdd got regulator\n");
 	}
 	vdd *= 1000; /* mV -> uV */
 	return regulator_set_voltage(drv_state.regulator, vdd, vdd);
+}
+
+static int acpuclk_set_vdd_level(int vdd)
+{
+	if (drv_state.acpu_set_vdd)
+		return drv_state.acpu_set_vdd(vdd);
+	else {
+		/* Assume that the PMIC supports scaling the processor
+		 * to its maximum frequency at its default voltage.
+		 */
+		return 0;
+	}
 }
 
 int acpuclk_set_rate(unsigned long rate, enum setrate_reason reason)
 {
 	struct clkctl_acpu_speed *cur, *next;
 	unsigned long flags;
+	int rc = 0;
+	int freq_index = 0;
 
 	cur = drv_state.current_speed;
 
@@ -420,7 +348,7 @@ int acpuclk_set_rate(unsigned long rate, enum setrate_reason reason)
 
 	DEBUG("acpuclk_set_rate(%d,%d)\n", (int) rate, reason);
 
-	if (rate == cur->acpu_khz || rate == 0)
+	if (rate == 0 || rate == cur->acpu_khz)
 		return 0;
 
 	next = acpu_freq_tbl;
@@ -434,12 +362,24 @@ int acpuclk_set_rate(unsigned long rate, enum setrate_reason reason)
 
 	if (reason == SETRATE_CPUFREQ) {
 		mutex_lock(&drv_state.lock);
+#ifdef CONFIG_MSM_CPU_AVS
+               /* Notify avs before changing frequency */
+               rc = avs_adjust_freq(freq_index, 1);
+               if (rc) {
+                       printk(KERN_ERR
+                               "acpuclock: Unable to increase ACPU "
+                               "vdd: %d.\n", (int) rate);
+                       mutex_unlock(&drv_state.lock);
+                       return rc;
+               }
+#endif
 		/* Increase VDD if needed. */
 		if (next->vdd > cur->vdd) {
-			if (acpuclk_set_vdd_level(next->vdd)) {
+			rc = acpuclk_set_vdd_level(next->vdd);
+			if (rc) {
 				pr_err("acpuclock: Unable to increase ACPU VDD.\n");
 				mutex_unlock(&drv_state.lock);
-				return -EINVAL;
+				return rc;
 			}
 		}
 	}
@@ -481,9 +421,17 @@ int acpuclk_set_rate(unsigned long rate, enum setrate_reason reason)
 	}
 #endif
 	if (reason == SETRATE_CPUFREQ) {
+#ifdef CONFIG_MSM_CPU_AVS
+               /* notify avs after changing frequency */
+               rc = avs_adjust_freq(freq_index, 0);
+               if (rc)
+                       printk(KERN_ERR
+                               "acpuclock: Unable to drop ACPU vdd: %d.\n", (int) rate);
+#endif
 		/* Drop VDD level if we can. */
 		if (next->vdd < cur->vdd) {
-			if (acpuclk_set_vdd_level(next->vdd))
+			rc= acpuclk_set_vdd_level(next->vdd);
+			if (rc)
 				pr_err("acpuclock: Unable to drop ACPU VDD.\n");
 		}
 		mutex_unlock(&drv_state.lock);
@@ -546,16 +494,10 @@ void __init acpu_freq_tbl_fixup(void)
 		break;
 	case 0x30:
 	case 0x00:
-#ifdef	CONFIG_HTCLEO_EXOVERCLOCK
-		max_acpu_khz = 1536000;
-#elif   CONFIG_HTCLEO_OVERCLOCK
-		max_acpu_khz = 1113600;
-#else
 		max_acpu_khz = 998400;
-#endif
 		break;
 	case 0x10:
-		max_acpu_khz = 1267200;
+		max_acpu_khz = 1190400;
 		break;
 	default:
 		pr_warning("Invalid efuse data (%x) on Max ACPU freq!\n",
@@ -577,7 +519,7 @@ skip_efuse_fixup:
 
 static void __init acpuclk_init(void)
 {
-	struct clkctl_acpu_speed *speed;
+	struct clkctl_acpu_speed *speed, *max_s;
 	unsigned init_khz;
 
 	init_khz = acpuclk_find_speed();
@@ -629,7 +571,19 @@ static void __init acpuclk_init(void)
 					   init_khz, speed->acpu_khz);
 
 	loops_per_jiffy = drv_state.current_speed->lpj;
+
+	for (speed = acpu_freq_tbl; speed->acpu_khz != 0; speed++)
+		;
+
+	max_s = speed - 1;
+	max_axi_rate = max_s->axiclk_khz * 1000;
 }
+
+unsigned long acpuclk_get_max_axi_rate(void)
+{
+	return max_axi_rate;
+}
+EXPORT_SYMBOL(acpuclk_get_max_axi_rate);
 
 unsigned long acpuclk_get_rate(void)
 {
@@ -663,6 +617,23 @@ unsigned long acpuclk_wait_for_irq(void)
 	return ret * 1000;
 }
 
+#ifdef CONFIG_MSM_CPU_AVS
+static int __init acpu_avs_init(int (*set_vdd) (int), int khz)
+{
+	int i;
+	int freq_count = 0;
+	int freq_index = -1;
+
+	for (i = 0; acpu_freq_tbl[i].acpu_khz; i++) {
+		freq_count++;
+		if (acpu_freq_tbl[i].acpu_khz == khz)
+			freq_index = i;
+	}
+
+	return avs_init(set_vdd, freq_count, freq_index);
+}
+#endif
+
 void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 {
 	spin_lock_init(&acpu_lock);
@@ -673,11 +644,11 @@ void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 	drv_state.vdd_switch_time_us = clkdata->vdd_switch_time_us;
 	drv_state.power_collapse_khz = clkdata->power_collapse_khz;
 	drv_state.wait_for_irq_khz = clkdata->wait_for_irq_khz;
+	drv_state.acpu_set_vdd = acpu_set_vdd;
 
 	if (clkdata->mpll_khz)
 		acpu_mpll->acpu_khz = clkdata->mpll_khz;
 
-	acpu_freq_tbl_fixup();
 	acpuclk_init();
 	acpuclk_init_cpufreq_table();
 	drv_state.clk_ebi1 = clk_get(NULL,"ebi1_clk");
@@ -686,7 +657,7 @@ void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 #endif
 }
 
-#ifdef CONFIG_CPU_FREQ_VDD_LEVELS
+#if defined(CONFIG_CPU_FREQ_VDD_LEVELS) && !defined(CONFIG_MSM_CPU_AVS)
 
 ssize_t acpuclk_get_vdd_levels_str(char *buf)
 {
@@ -707,7 +678,7 @@ ssize_t acpuclk_get_vdd_levels_str(char *buf)
 void acpuclk_set_vdd(unsigned acpu_khz, int vdd)
 {
 	int i;
-	vdd = vdd / 25 * 25;	//! regulator only accepts multiples of 25 (mV)
+	vdd = (vdd / HTCLEO_TPS65023_UV_STEP_MV) * HTCLEO_TPS65023_UV_STEP_MV;
 	mutex_lock(&drv_state.lock);
 	for (i = 0; acpu_freq_tbl[i].acpu_khz; i++)
 	{
@@ -720,6 +691,21 @@ void acpuclk_set_vdd(unsigned acpu_khz, int vdd)
 		}
 	}
 	mutex_unlock(&drv_state.lock);
+}
+
+unsigned int acpuclk_get_vdd_min(void)
+{
+	 return HTCLEO_TPS65023_MIN_UV_MV;
+}
+
+unsigned int acpuclk_get_vdd_max(void)
+{
+	return HTCLEO_TPS65023_MAX_UV_MV;
+}
+
+unsigned int acpuclk_get_vdd_step(void)
+{
+	return HTCLEO_TPS65023_UV_STEP_MV;
 }
 
 #endif

@@ -1266,9 +1266,6 @@ static int msm_hs_startup(struct uart_port *uport)
 	if (unlikely(ret))
 		return ret;
 	if (use_low_power_rx_wakeup(msm_uport)) {
-		/* move from startup  **/
-		if (unlikely(set_irq_wake(msm_uport->rx_wakeup.irq, 1)))
-			return -ENXIO;
 		ret = request_irq(msm_uport->rx_wakeup.irq,
 				  msm_hs_rx_wakeup_isr,
 				  IRQF_TRIGGER_FALLING,
@@ -1356,9 +1353,6 @@ static int msm_hs_probe(struct platform_device *pdev)
 	struct resource *resource;
 	struct msm_serial_hs_platform_data *pdata = pdev->dev.platform_data;
 
-	/* for debug */
-	printk(KERN_INFO "PRUE G\n");
-
 	if (pdev->id < 0 || pdev->id >= UARTDM_NR) {
 		printk(KERN_ERR "Invalid plaform device ID = %d\n", pdev->id);
 		return -EINVAL;
@@ -1379,10 +1373,8 @@ static int msm_hs_probe(struct platform_device *pdev)
 		return -ENOMEM;
 
 	uport->irq = platform_get_irq(pdev, 0);
-	/*
 	if (unlikely(uport->irq < 0))
 		return -ENXIO;
-	*/
 	if (unlikely(set_irq_wake(uport->irq, 1)))
 		return -ENXIO;
 
@@ -1396,10 +1388,8 @@ static int msm_hs_probe(struct platform_device *pdev)
 
 		if (unlikely(msm_uport->rx_wakeup.irq < 0))
 			return -ENXIO;
-		/* move this to startup
-		 * if (unlikely(set_irq_wake(msm_uport->rx_wakeup.irq, 1)))
-		 * return -ENXIO;
-		 */
+		if (unlikely(set_irq_wake(msm_uport->rx_wakeup.irq, 1)))
+			return -ENXIO;
 	}
 
 	if (pdata == NULL)
@@ -1495,11 +1485,6 @@ static void msm_hs_shutdown(struct uart_port *uport)
 	/* Disable the receiver */
 	msm_hs_write(uport, UARTDM_CR_ADDR, UARTDM_CR_RX_DISABLE_BMSK);
 
-	/* disable irq wakeup when shutdown **/
-	if (use_low_power_rx_wakeup(msm_uport))
-		if (unlikely(set_irq_wake(msm_uport->rx_wakeup.irq, 0)))
-			return;
-
 	/* Free the interrupt */
 	free_irq(uport->irq, msm_uport);
 	if (use_low_power_rx_wakeup(msm_uport))
@@ -1524,9 +1509,6 @@ static void msm_hs_shutdown(struct uart_port *uport)
 
 	if (cancel_work_sync(&msm_uport->rx.tty_work))
 		msm_hs_tty_flip_buffer_work(&msm_uport->rx.tty_work);
-
-	/* make sure wake_lock is released */
-	wake_lock_timeout(&msm_uport->rx.wake_lock, HZ / 10);
 }
 
 static void __exit msm_serial_hs_exit(void)
