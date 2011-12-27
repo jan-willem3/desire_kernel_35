@@ -1,0 +1,439 @@
+commit 3149dff8a41ebe79ec28a36f67418fba399888a8
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Tue Dec 27 00:14:46 2011 +0100
+
+    Some tweaks suggested by jan-willem3
+
+commit 72214a364c2e621416db9fe123ac39a8e775bc33
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Mon Dec 26 22:49:13 2011 +0100
+
+    Use a realtime priority thread for AVS. Tweaked AVS code, Tweak camera -- bananacakes, Raise VOLTAGE_MIN_START of AVS to 950
+
+commit 4651dfb6fbc7596a57d55400fc29d75d8a54cae6
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Mon Dec 26 19:22:22 2011 +0100
+
+    Added max_control_command_size for data in camera, added missing AVS initialization & regulator changes, and fixed ondemandx governor (Thanks to Marc1706)
+
+commit 57f634c4fc3491f099297143549a3905e6556264
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Sat Dec 24 00:40:55 2011 +0100
+
+    Small tweak
+
+commit 94e54f9d5ad12c3ae9ef1114c6c5175d46e90515
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Sat Dec 24 00:11:55 2011 +0100
+
+    Make Superbad default governor
+
+commit c5e9b8ecb1c2af51ef5b522833b0d9dc37d53693
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Sat Dec 24 00:08:03 2011 +0100
+
+    Version fix
+
+commit 1c095a8aa70389962feb5db7860f9f86e07fec4a
+Merge: 04106b3 21bf873
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Fri Dec 23 23:57:34 2011 +0100
+
+    Merge branch 'nonsense' of https://github.com/fhasovic/desire_kernel_35 into nonsense
+    
+    Conflicts:
+    	arch/arm/configs/htcleo_defconfig
+
+commit 04106b35de51922e0939ee0fc2093dc0cce92bc1
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Fri Dec 23 23:55:32 2011 +0100
+
+    Updated version
+
+commit 21bf87352ea30628088f818d36552827c9b82439
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Fri Dec 23 23:30:29 2011 +0100
+
+    Added governors and schedulers, added and tweaked AVS, tweaked bluetooth and fixed powerdrain in standby.
+
+commit 00d9c60976a321c3c5b9ec9b031c6ba23c8166f4
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 15:55:42 2011 -0800
+
+    Locking down the Overclock until we can figure out instability.
+
+commit fd7f3ba8f590c2f7aba0b5e96c42638060b9b425
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 15:43:59 2011 -0800
+
+    Adjusted Min/Max CPU
+
+commit fcd0c524b17a29b25bb175b45af4a4253a8e3212
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 12:55:51 2011 -0800
+
+    Camera mod, removed USB call for AXI rate, added HTC Auto White Balance.
+
+commit 30c8cca7c2df4ba5045e8de5758cb67b545ccda9
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 12:47:27 2011 -0800
+
+    Pushed the 32 style CPU tables.
+    Very few differences existed.  May need to add back in AXI rate stuff.
+
+commit 0bd610a465036846f0849740b1f5cbd6adb6e870
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 12:39:07 2011 -0800
+
+    Attempt to stop WiFi from occasionally dieing.  Originally from CM.
+
+commit cbc29dce68bb5e0b298578845093ac99a2357de0
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 12:37:54 2011 -0800
+
+    Overclocked Camera to Cyanogen Specifications.
+
+commit 58b840267b8662e486be1f9bf2d0215193615cfb
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 12:34:32 2011 -0800
+
+    Added back in limited extended battery support.
+    
+    Confident we can do better, especially referencing battery ID's.
+
+commit 629c66e72c1e53e6e92d2a259c38e20b95b28f55
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 12:22:28 2011 -0800
+
+    Corrected previous commit.
+
+commit fe928825adbe4699634fd22aa8bb4b4248ebbbac
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Nov 30 12:17:17 2011 -0800
+
+    Added ACA-style BT Drain fix.
+    Pro's:  Stability for most BT devices
+    Con's:  60mah while BT enabled.
+
+commit babbf2182b413bce1330d917330f9d5a71fa46ea
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 20:41:31 2011 -0800
+
+    Another step to getting BT LPM enabled
+
+commit e4bead92ca0c0545e2f7d3463648035365fcbe23
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 20:14:17 2011 -0800
+
+    Further change Bluetooth
+
+commit c6dd12b852aeaaba668665998406780f83849e4c
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 19:54:35 2011 -0800
+
+    Updated BT Stack to cm-on-wince 35
+
+commit 8adf10a21825c7b1ba044e2aa19a504252536562
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 19:28:56 2011 -0800
+
+    Further modded compiledcopy for all modules
+
+commit dc051a824244e85416e5ab3a65830015ff7bcaaa
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 19:19:57 2011 -0800
+
+    Fixed last of ALSA compile issue.
+    
+    Modded the compiledcopy to be better.
+
+commit df035650fc562466505a0540c9ead2adfbbb934f
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 18:58:06 2011 -0800
+
+    Commited conf changes
+
+commit 66b1b2a359df49a72d2380dd471e9177e243cbd3
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 18:14:09 2011 -0800
+
+    Added ALSA stuffs.
+
+commit a438ef6776a81c494d8970d2dfd4a518fa6a1232
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 17:21:00 2011 -0800
+
+    Added CM-ON-WINCE 35 GPU Driver.  As expected, fixed cam and video.
+    
+    Modified the compile files to reflect NONSENSE.
+
+commit aceee138c6d646eb367c6b7c877b6a80af184b7c
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Mon Nov 28 13:26:36 2011 -0800
+
+    Added 35 GPU code.  There are a couple remaining things stopping compile.
+
+commit c35875c517196783124590518a102a0ad8f2191a
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sun Nov 27 19:24:19 2011 +0100
+
+    A little bit of clean up
+
+commit fe790cfadb69e545aec1039de547988014fa7d7e
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sun Nov 27 16:26:01 2011 +0100
+
+    Raised HZ to 1000
+
+commit 0d508ad5979e88253c334ed2eff8bdb752058966
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sun Nov 27 02:13:25 2011 +0100
+
+    Added BFS v0.404
+
+commit d70b9203f3dfdc4d8aae4cb8fe1a67936a9d4de3
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 21:11:11 2011 +0100
+
+    Updated localversion
+
+commit 66f004cf0379eb670a1ee136ef80a3fa37a99229
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 21:08:52 2011 +0100
+
+    Added missing Kconfig entry for button backlight mgr
+
+commit 3d1296c4d06722a9921641e8659c4fe476c237a6
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 20:47:17 2011 +0100
+
+    GSensor Fix (i2c) by rafpigna
+
+commit 5302d0554ed435439ade37e0171786cbe9c63ada
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 20:31:11 2011 +0100
+
+    FIX: MSM HW 3D Register Driver
+    by banancakes
+
+commit d4c5d1261b1f9a5eab3f4dce0c7de850b5e950e1
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 20:27:34 2011 +0100
+
+    Decrease max_transition_latency of smartassV2 w/scorpion CPU
+    Fix by bananacakes & intersectRaven
+
+commit 5c1ba04c48fe97ce30304b5ec0afe826bfa8217f
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 14:09:42 2011 +0100
+
+    Patched to 2.6.35.14
+
+commit 8dfdd5088e211f373bff81c824ab3fdbaaf94c00
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 13:46:03 2011 +0100
+
+    Patched to 2.6.35.13
+
+commit 739a6b89cde5a10a25cb0c733f810c3f081ff13b
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 12:17:27 2011 +0100
+
+    Patched to 2.6.35.12
+
+commit 60f53cb4f6b70c464577e0b569d4ae77d3daaf5b
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 02:12:10 2011 +0100
+
+    Patched kernel to 2.6.35.11
+
+commit f74827557a30d51716dc5cc642c93d1ebfeae185
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Nov 26 01:24:36 2011 +0100
+
+    Reduced max OC to 1152 MHz
+
+commit 13ede2374c09c2ebbb0bff049a3a584705084f2e
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Thu Nov 24 17:15:49 2011 +0100
+
+    Enabled 1,53 GHZ in defconfig
+
+commit 0343df865bee4245fa27a6f39a5000c857d9b545
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Thu Nov 24 16:50:20 2011 +0100
+
+    Added missing overclock parameters to Kconfig
+
+commit 3869155f617912f2c380a8e6ba9a1e3da9d902ea
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Thu Nov 24 14:26:50 2011 +0100
+
+    Added overclocking speeds
+    Added wakeup lag fix
+    Added a few tweaks, i.e. to htc_battery.c
+
+commit be143059a34bbcac55b7b3088ff028f9f493bcaf
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Tue Nov 22 17:24:50 2011 +0100
+
+    Fixed issue with usb charging
+
+commit c875967760380e9190b1f8550fb6484155f424f4
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Wed Nov 16 14:40:43 2011 +0100
+
+    Modified ignored files
+
+commit 6c9da937be2c445310db88ea046c0ca4be7c0f5e
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Wed Nov 16 13:56:24 2011 +0100
+
+    Fixed audio flinger issue
+
+commit b2bc8837a8e966c44c187ef19fc466a1b6cf3be3
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Wed Nov 16 13:55:49 2011 +0100
+
+    Add .gitignore from cm-kernel
+
+commit f8ee85911ae40f0f6143f7abd3fddf01db20a44a
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Wed Nov 16 13:55:06 2011 +0100
+
+    Added smartassV2 governor
+
+commit 29bd36c0b1b4f20bfd5f943c128976f08d59f811
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Wed Nov 16 13:53:42 2011 +0100
+
+    Added better handling of min & max mV
+
+commit 75fe2956ef2bfe1e30f0e222c7b5e90391aa3795
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Mon Oct 17 22:20:31 2011 +0200
+
+    Fixed proximity sensor
+    Added CONFIG_MSM_CAMERA_LEGACY
+
+commit 44e1da52d5bfd33ab1acea8e6dfec1d831eabd2a
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sun Oct 16 00:15:04 2011 +0200
+
+    Added perflock
+
+commit 158c15c3b5a95376f7f7484df29a7cd04a156684
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Sat Oct 15 19:38:34 2011 +0200
+
+    Updated usb & regulator code
+
+commit c84ccc1cef396ece0072c82778ef12d4c178d017
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Fri Oct 14 22:41:33 2011 +0200
+
+    Fixed LED notifications
+
+commit 4683695be8582edad950dee49fcec2be83a30e76
+Merge: daa49cf 681cf4d
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Fri Oct 14 11:09:22 2011 +0200
+
+    Merge branch 'master' of git://gitorious.org/aca-kernel-htc-35/aca-kernel-htc-35
+    
+    Conflicts:
+    	arch/arm/mach-msm/Kconfig
+    	arch/arm/mach-msm/amss_para.c
+    	arch/arm/mach-msm/include/mach/amss_para.h
+    	include/config/auto.conf
+    	include/generated/autoconf.h
+    	include/generated/compile.h
+
+commit 681cf4d15c4e4ef8759de333b7aa1f1791c3866e
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Fri Oct 14 01:02:08 2011 -0700
+
+    Added Marc's voice/data fix.
+
+commit daa49cf3d17a5247a70d0ed1a3e380bb19710480
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Fri Oct 14 01:53:25 2011 +0200
+
+    Fixed voice and data
+
+commit 346761bc635fdc039248f1253a492ac16daf818e
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Thu Sep 22 01:18:48 2011 -0700
+
+    Implemented the ACA Kernel compile/packaging scripts.
+    
+    Soon will set the git to ignore user generated files and general git stuff.
+
+commit bb162d1c0854cad7f8b399bb61a184a7ca253ffe
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Sep 21 21:31:13 2011 -0700
+
+    Committed most of Marc's merge.
+    
+    Changed makefile to use correct q6.
+    
+    This fixes wifi and leaves us only with a few issues left to correct.
+    Such as bluetooth....which I think I can fix.
+
+commit 2bd34024a49b0ccaa45f8813f0e3b81b7d406ba9
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Thu Sep 22 01:18:48 2011 -0700
+
+    Implemented the ACA Kernel compile/packaging scripts.
+    
+    Soon will set the git to ignore user generated files and general git stuff.
+
+commit 59a8e87a1be7556cd583e6014d8158e46ea3403b
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Wed Sep 21 21:31:13 2011 -0700
+
+    Committed most of Marc's merge.
+    
+    Changed makefile to use correct q6.
+    
+    This fixes wifi and leaves us only with a few issues left to correct.
+    Such as bluetooth....which I think I can fix.
+
+commit ac7aa8ce40f77ebba720c6102f4c67982d3b4eb6
+Author: Marc Alexander <admin@m-a-styles.de>
+Date:   Wed Sep 21 14:13:23 2011 +0200
+
+    Fixed boot issues
+
+commit 790e8aa843fb6951bd251aee8439ae4461f77e57
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Tue Sep 20 01:36:44 2011 -0700
+
+    Also enabled BCM4329_SOFTAP
+
+commit 67e3cb5bee179137d82e581009a808164346724d
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Tue Sep 20 00:37:20 2011 -0700
+
+    Remaining key portions ported.  Now waiting on others to debug/assist
+    in booting etc.
+
+commit dba285d07f5ce581b35f8ecd8166cef46eaf9942
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Sun Sep 18 19:31:26 2011 -0700
+
+    I do believe we are close to boot.
+    
+    Can finish compile at least
+
+commit b84a776b06dff0493f5967ff1d0830f90f2e6341
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Sun Sep 18 03:15:19 2011 -0700
+
+    Did some key ports
+
+commit e06129122f8d09830306e078c63d1aafbd0b5224
+Author: warrenb213 <AmeriCanAndroidROM@gmail.com>
+Date:   Fri Sep 16 01:50:48 2011 -0700
+
+    Initial Commit of HTC Bravo/Desire GB 2.3.5 Kernel 2.6.35

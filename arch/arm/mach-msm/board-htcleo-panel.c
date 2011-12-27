@@ -1614,7 +1614,7 @@ static void detect_panel_type(void)
 	else
 	{
 		htcleo_panel_type = PANELTYPE_UNKNOWN;
-		extern int board_mfg_mode(void);
+
 		if(board_mfg_mode()==5) 
 		{
 			printk(" offmode charging, panel is off\n");

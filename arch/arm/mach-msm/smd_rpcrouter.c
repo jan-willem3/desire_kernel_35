@@ -664,8 +664,10 @@ static void do_read_data(struct work_struct *work)
 	frag = rr_malloc(hdr.size + sizeof(*frag));
 	frag->next = NULL;
 	frag->length = hdr.size;
-	if (rr_read(frag->data, hdr.size))
+	if (rr_read(frag->data, hdr.size)) {
+                kree(frag);
 		goto fail_io;
+        }
 
 	ept = rpcrouter_lookup_local_endpoint(hdr.dst_cid);
 	if (!ept) {
@@ -715,6 +717,7 @@ packet_complete:
 		pr_warning("smd_rpcrouter: Unexpected incoming data on %08x:%08x\n",
 				be32_to_cpu(ept->dst_prog),
 				be32_to_cpu(ept->dst_vers));
+                kfree(pkt);
 	}
 	spin_unlock_irqrestore(&ept->read_q_lock, flags);
 done:
