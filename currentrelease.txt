@@ -1,3 +1,12 @@
+commit 3a476fb6bd2e0908de7c2d1b7e24b9ea253d9d1c
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Tue Dec 27 04:56:33 2011 +0100
+
+    Some cleanups from marc
+    fix scaling_cur_freq bananacakes
+    Another nikantonelli fix
+    Jhash3 (by jan-willem3)
+
 commit 3149dff8a41ebe79ec28a36f67418fba399888a8
 Author: Fikret Hasovic <fikret@ubuntu.(none)>
 Date:   Tue Dec 27 00:14:46 2011 +0100

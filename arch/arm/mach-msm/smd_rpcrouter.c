@@ -665,7 +665,7 @@ static void do_read_data(struct work_struct *work)
 	frag->next = NULL;
 	frag->length = hdr.size;
 	if (rr_read(frag->data, hdr.size)) {
-                kree(frag);
+                kfree(frag);
 		goto fail_io;
         }
 

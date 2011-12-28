@@ -1314,6 +1314,8 @@ static int __init clock_late_init(void)
 	return 0;
 }
 
+late_initcall(clock_late_init);
+
 struct clk_ops clk_ops_pcom = {
 	.enable = pc_clk_enable,
 	.disable = pc_clk_disable,
@@ -1328,4 +1330,4 @@ struct clk_ops clk_ops_pcom = {
 //	.round_rate = pc_clk_round_rate,
 };
 
-late_initcall(clock_late_init);
+
