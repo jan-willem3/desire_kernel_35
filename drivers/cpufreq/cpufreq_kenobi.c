@@ -5,7 +5,7 @@
  *            (C)  2003 Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>.
  *                      Jun Nakajima <jun.nakajima@intel.com>
  *            (C)  2011 Ezekeel <notezekeel@googlemail.com>
- *            (C)  2011 Sar Castillo <sar.castillo@gmail.com> (Added fast_start and deep_sleep to lazy)
+ *            (C)  2011 Sar Castillo <sar.castillo@gmail.com> (Added fast_start and deep_sleep by arighi to lazy)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -25,7 +25,7 @@
 #include <linux/ktime.h>
 #include <linux/sched.h>
 #include <linux/notifier.h>
-#include <linux/idle.h>
+#include <asm/idle.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>

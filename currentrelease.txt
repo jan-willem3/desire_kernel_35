@@ -1,3 +1,9 @@
+commit c89f9996df5d3bd40b4bf7a82ed9bb4d55f062be
+Author: Fikret Hasovic <fikret@ubuntu.(none)>
+Date:   Wed Dec 28 11:27:31 2011 +0100
+
+    wince structure fix, small other fixes
+
 commit 3a476fb6bd2e0908de7c2d1b7e24b9ea253d9d1c
 Author: Fikret Hasovic <fikret@ubuntu.(none)>
 Date:   Tue Dec 27 04:56:33 2011 +0100
