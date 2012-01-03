@@ -375,6 +375,7 @@ static int config_buf(struct usb_configuration *config,
 	c->bmAttributes = USB_CONFIG_ATT_ONE | config->bmAttributes;
 	c->bMaxPower = config->bMaxPower ? : (CONFIG_USB_GADGET_VBUS_DRAW / 2);
 
+#if 0	
 	/* There may be e.g. OTG descriptors */
 	if (config->descriptors) {
 		status = usb_descriptor_fillbuf(next, len,
@@ -384,7 +385,7 @@ static int config_buf(struct usb_configuration *config,
 		len -= status;
 		next += status;
 	}
-
+#endif
 	/* add each function's descriptors */
 	list_for_each_entry(f, &config->functions, list) {
 		struct usb_descriptor_header **descriptors;
