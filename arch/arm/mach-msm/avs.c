@@ -126,13 +126,11 @@ struct clkctl_acpu_speed acpu_vdd_tbl[] = {
 	{ 960000, 1250, 1275 },
 	{ 998400, 1250, 1275 },
 #ifdef	USE_OVERCLOCKING
-	{ 1036800, 1250, 1275 },
-	{ 1075200, 1250, 1275 },
-	{ 1113600, 1275, 1300 },
-//#endif
-//#ifdef	USE_EXTREMEOVERCLOCKING
-	{ 1152000, 1250, 1300 },
-	{ 1190400, 1250, 1300 },
+	{ 1036800, 1250, VOLTAGE_MAX },
+	{ 1075200, 1250, VOLTAGE_MAX },
+	{ 1113600, 1275, VOLTAGE_MAX },
+	{ 1152000, 1250, VOLTAGE_MAX },
+	{ 1190400, 1250, VOLTAGE_MAX },
 #endif
 	{ 0 },
 };
